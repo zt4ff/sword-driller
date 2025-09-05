@@ -77,14 +77,14 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
         </label>
         <input
           type="range"
-          min="5"
+          min="3"
           max="30"
           value={config.timer}
           onChange={(e) => updateTimer(Number(e.target.value))}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
         />
         <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
-          <span>5s</span>
+          <span>3s</span>
           <span className="font-medium">{config.timer}s</span>
           <span>30s</span>
         </div>

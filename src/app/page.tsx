@@ -5,7 +5,9 @@ import { Timer } from "@/components/Timer";
 import { ConfigPanel } from "@/components/ConfigPanel";
 import { QuestionDisplay } from "@/components/QuestionDisplay";
 import { ProgressBar } from "@/components/ProgressBar";
+import { TTSControls } from "@/components/TTSControls";
 import { bibleBooks, biblePassages, fatherhoodQuotes } from "@/data/bibleData";
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 
 type SectionType = "books" | "passages" | "fatherhood";
 
@@ -16,6 +18,8 @@ interface Config {
     count: number;
   }[];
   trainingTime: number; // minutes
+  autoSpeak: boolean; // Auto-speak questions
+  speakingRate: number; // Speech rate
 }
 
 interface Question {
@@ -33,6 +37,8 @@ export default function Home() {
       { type: "fatherhood", count: 3 },
     ],
     trainingTime: 15,
+    autoSpeak: true,
+    speakingRate: 0.9,
   });
 
   const [isTraining, setIsTraining] = useState(false);
@@ -42,6 +48,52 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [trainingStartTime, setTrainingStartTime] = useState<Date | null>(null);
   const [score, setScore] = useState(0);
+  const [isSearchPhase, setIsSearchPhase] = useState(false); // New state to track if timer should run
+
+  const { speak, stop, isSpeaking, isSupported } = useTextToSpeech();
+
+  const speakQuestionSequence = useCallback(
+    (question: Question) => {
+      if (!isSupported || !config.autoSpeak) {
+        // If TTS is not supported or disabled, start search phase immediately
+        setIsSearchPhase(true);
+        return;
+      }
+
+      setIsSearchPhase(false); // Stop timer during speech sequence
+
+      // Step 1: Say "Draw up your sword"
+      speak("Draw up your sword", {
+        rate: config.speakingRate,
+        pitch: 1,
+        volume: 0.8,
+      });
+
+      // Step 2: Wait 3 seconds, then call out the question
+      setTimeout(() => {
+        speak(question.text, {
+          rate: config.speakingRate,
+          pitch: 1,
+          volume: 0.8,
+        });
+
+        // Step 3: Wait another moment, then say "Search" and start timer
+        setTimeout(() => {
+          speak("Search", {
+            rate: config.speakingRate,
+            pitch: 1,
+            volume: 0.8,
+          });
+
+          // Start the search phase (timer) after "Search" is said
+          setTimeout(() => {
+            setIsSearchPhase(true);
+          }, 1000); // Small delay to ensure "Search" is spoken
+        }, 2000); // 2 seconds after question is spoken
+      }, 3000); // 3 seconds after "Draw up your sword"
+    },
+    [speak, isSupported, config.autoSpeak, config.speakingRate]
+  );
 
   const generateQuestions = useCallback(() => {
     const allQuestions: Question[] = [];
@@ -100,32 +152,75 @@ export default function Home() {
     setCurrentQuestion(newQuestions[0]);
     setTimeLeft(config.timer);
     setIsTraining(true);
+    setIsSearchPhase(false);
     setTrainingStartTime(new Date());
     setScore(0);
+
+    // Start the speech sequence for the first question
+    setTimeout(() => {
+      if (newQuestions[0]) {
+        speakQuestionSequence(newQuestions[0]);
+      }
+    }, 1000);
   };
 
-  const nextQuestion = () => {
+  const nextQuestion = useCallback(() => {
     if (questionIndex < questions.length - 1) {
       const nextIndex = questionIndex + 1;
       setQuestionIndex(nextIndex);
       setCurrentQuestion(questions[nextIndex]);
       setTimeLeft(config.timer);
+      setIsSearchPhase(false); // Reset search phase
       setScore((prev) => prev + 1);
+
+      // Start speech sequence for next question
+      setTimeout(() => {
+        speakQuestionSequence(questions[nextIndex]);
+      }, 500);
     } else {
       // Training complete
+      stop(); // Stop any ongoing speech
       setIsTraining(false);
       setCurrentQuestion(null);
+      setIsSearchPhase(false);
+
+      // Announce completion
+      if (config.autoSpeak) {
+        setTimeout(() => {
+          speak("Training session completed! Well done!", {
+            rate: config.speakingRate,
+          });
+        }, 500);
+      }
     }
-  };
+  }, [
+    questionIndex,
+    questions,
+    config.timer,
+    speakQuestionSequence,
+    stop,
+    speak,
+    config.autoSpeak,
+    config.speakingRate,
+  ]);
 
   const skipQuestion = () => {
+    stop(); // Stop current speech
     nextQuestion();
   };
 
+  // Manual speak current question with full sequence
+  const speakCurrentQuestion = () => {
+    if (currentQuestion) {
+      speakQuestionSequence(currentQuestion);
+    }
+  };
+
+  // Modified useEffect to only run timer during search phase
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isTraining && timeLeft > 0) {
+    if (isTraining && isSearchPhase && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -139,7 +234,7 @@ export default function Home() {
     }
 
     return () => clearInterval(interval);
-  }, [isTraining, timeLeft, config.timer, questionIndex, questions.length]);
+  }, [isTraining, isSearchPhase, timeLeft, config.timer, nextQuestion]);
 
   // Check if training time limit reached
   useEffect(() => {
@@ -148,21 +243,23 @@ export default function Home() {
         const elapsed =
           (new Date().getTime() - trainingStartTime.getTime()) / 1000 / 60;
         if (elapsed >= config.trainingTime) {
+          stop(); // Stop any ongoing speech
           setIsTraining(false);
           setCurrentQuestion(null);
+          setIsSearchPhase(false);
         }
       }, 1000);
 
       return () => clearInterval(interval);
     }
-  }, [isTraining, trainingStartTime, config.trainingTime]);
+  }, [isTraining, trainingStartTime, config.trainingTime, stop]);
 
   const progress =
     questions.length > 0 ? (questionIndex / questions.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 flex flex-col">
+      <div className="max-w-4xl mx-auto flex-grow">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
             Sword Driller
@@ -170,6 +267,13 @@ export default function Home() {
           <p className="text-gray-600 dark:text-gray-300">
             Bible Drill Training Application
           </p>
+          {!isSupported && (
+            <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                Text-to-speech is not supported in your browser
+              </p>
+            </div>
+          )}
         </header>
 
         {!isTraining ? (
@@ -203,8 +307,21 @@ export default function Home() {
           <div className="space-y-6">
             <ProgressBar current={questionIndex + 1} total={questions.length} />
 
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-4">
               <Timer timeLeft={timeLeft} totalTime={config.timer} />
+
+              {/* Status indicator */}
+              <div className="text-center">
+                {!isSearchPhase ? (
+                  <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
+                    {isSpeaking ? "🔊 Listen..." : "⏳ Preparing..."}
+                  </p>
+                ) : (
+                  <p className="text-lg font-medium text-green-600 dark:text-green-400">
+                    🔍 Search!
+                  </p>
+                )}
+              </div>
             </div>
 
             {currentQuestion && (
@@ -215,11 +332,21 @@ export default function Home() {
               />
             )}
 
+            {/* TTS Controls */}
+            <TTSControls
+              onSpeak={speakCurrentQuestion}
+              onStop={stop}
+              isSpeaking={isSpeaking}
+              isSupported={isSupported}
+            />
+
             <div className="text-center">
               <button
                 onClick={() => {
+                  stop(); // Stop any ongoing speech
                   setIsTraining(false);
                   setCurrentQuestion(null);
+                  setIsSearchPhase(false);
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
               >
@@ -229,6 +356,18 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Powered by{" "}
+            <span className="font-medium text-gray-700 dark:text-gray-300">
+              First Baptist Church Alapere Media Team
+            </span>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

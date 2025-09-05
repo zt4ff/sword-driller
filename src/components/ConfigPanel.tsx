@@ -9,6 +9,8 @@ interface Config {
     count: number;
   }[];
   trainingTime: number;
+  autoSpeak: boolean;
+  speakingRate: number;
 }
 
 interface ConfigPanelProps {
@@ -23,6 +25,14 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
 
   const updateTrainingTime = (trainingTime: number) => {
     onConfigChange({ ...config, trainingTime });
+  };
+
+  const updateAutoSpeak = (autoSpeak: boolean) => {
+    onConfigChange({ ...config, autoSpeak });
+  };
+
+  const updateSpeakingRate = (speakingRate: number) => {
+    onConfigChange({ ...config, speakingRate });
   };
 
   const updateSectionCount = (type: SectionType, count: number) => {
@@ -98,6 +108,49 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
           <span className="font-medium">{config.trainingTime}m</span>
           <span>60m</span>
         </div>
+      </div>
+
+      {/* Text-to-Speech Settings */}
+      <div className="mb-6 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
+          Text-to-Speech
+        </h3>
+
+        <div className="mb-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={config.autoSpeak}
+              onChange={(e) => updateAutoSpeak(e.target.checked)}
+              className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Auto-speak questions
+            </span>
+          </label>
+        </div>
+
+        {config.autoSpeak && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Speaking Rate
+            </label>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={config.speakingRate}
+              onChange={(e) => updateSpeakingRate(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+            />
+            <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <span>Slow</span>
+              <span className="font-medium">{config.speakingRate}x</span>
+              <span>Fast</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sections */}

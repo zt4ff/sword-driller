@@ -1,103 +1,234 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { Timer } from "@/components/Timer";
+import { ConfigPanel } from "@/components/ConfigPanel";
+import { QuestionDisplay } from "@/components/QuestionDisplay";
+import { ProgressBar } from "@/components/ProgressBar";
+import { bibleBooks, biblePassages, fatherhoodQuotes } from "@/data/bibleData";
+
+type SectionType = "books" | "passages" | "fatherhood";
+
+interface Config {
+  timer: number; // seconds
+  sections: {
+    type: SectionType;
+    count: number;
+  }[];
+  trainingTime: number; // minutes
+}
+
+interface Question {
+  type: SectionType;
+  text: string;
+  reference?: string;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [config, setConfig] = useState<Config>({
+    timer: 10,
+    sections: [
+      { type: "books", count: 5 },
+      { type: "passages", count: 5 },
+      { type: "fatherhood", count: 3 },
+    ],
+    trainingTime: 15,
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const [isTraining, setIsTraining] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [trainingStartTime, setTrainingStartTime] = useState<Date | null>(null);
+  const [score, setScore] = useState(0);
+
+  const generateQuestions = useCallback(() => {
+    const allQuestions: Question[] = [];
+
+    // Process sections in order without shuffling between them
+    config.sections.forEach((section) => {
+      const sectionQuestions: Question[] = [];
+
+      for (let i = 0; i < section.count; i++) {
+        switch (section.type) {
+          case "books":
+            const randomBook =
+              bibleBooks[Math.floor(Math.random() * bibleBooks.length)];
+            sectionQuestions.push({
+              type: "books",
+              text: randomBook,
+            });
+            break;
+          case "passages":
+            const randomPassage =
+              biblePassages[Math.floor(Math.random() * biblePassages.length)];
+            sectionQuestions.push({
+              type: "passages",
+              text: randomPassage.reference,
+              reference: randomPassage.text,
+            });
+            break;
+          case "fatherhood":
+            const randomQuote =
+              fatherhoodQuotes[
+                Math.floor(Math.random() * fatherhoodQuotes.length)
+              ];
+            sectionQuestions.push({
+              type: "fatherhood",
+              text: randomQuote.quote,
+              reference: randomQuote.reference,
+            });
+            break;
+        }
+      }
+
+      // Shuffle only within the current section
+      sectionQuestions.sort(() => Math.random() - 0.5);
+
+      // Add section questions to the overall list
+      allQuestions.push(...sectionQuestions);
+    });
+
+    return allQuestions;
+  }, [config]);
+
+  const startTraining = () => {
+    const newQuestions = generateQuestions();
+    setQuestions(newQuestions);
+    setQuestionIndex(0);
+    setCurrentQuestion(newQuestions[0]);
+    setTimeLeft(config.timer);
+    setIsTraining(true);
+    setTrainingStartTime(new Date());
+    setScore(0);
+  };
+
+  const nextQuestion = () => {
+    if (questionIndex < questions.length - 1) {
+      const nextIndex = questionIndex + 1;
+      setQuestionIndex(nextIndex);
+      setCurrentQuestion(questions[nextIndex]);
+      setTimeLeft(config.timer);
+      setScore((prev) => prev + 1);
+    } else {
+      // Training complete
+      setIsTraining(false);
+      setCurrentQuestion(null);
+    }
+  };
+
+  const skipQuestion = () => {
+    nextQuestion();
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isTraining && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Time's up, move to next question
+            nextQuestion();
+            return config.timer;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isTraining, timeLeft, config.timer, questionIndex, questions.length]);
+
+  // Check if training time limit reached
+  useEffect(() => {
+    if (isTraining && trainingStartTime) {
+      const interval = setInterval(() => {
+        const elapsed =
+          (new Date().getTime() - trainingStartTime.getTime()) / 1000 / 60;
+        if (elapsed >= config.trainingTime) {
+          setIsTraining(false);
+          setCurrentQuestion(null);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isTraining, trainingStartTime, config.trainingTime]);
+
+  const progress =
+    questions.length > 0 ? (questionIndex / questions.length) * 100 : 0;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="max-w-4xl mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+            Sword Driller
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Bible Drill Training Application
+          </p>
+        </header>
+
+        {!isTraining ? (
+          <div className="grid md:grid-cols-2 gap-8">
+            <ConfigPanel config={config} onConfigChange={setConfig} />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
+                Ready to Start?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Your training session will include{" "}
+                {config.sections.reduce((sum, s) => sum + s.count, 0)} questions
+                over {config.trainingTime} minutes.
+              </p>
+              <button
+                onClick={startTraining}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              >
+                Start Training
+              </button>
+              {score > 0 && (
+                <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <p className="text-green-800 dark:text-green-200">
+                    Last session: {score} questions completed!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <ProgressBar current={questionIndex + 1} total={questions.length} />
+
+            <div className="flex justify-center">
+              <Timer timeLeft={timeLeft} totalTime={config.timer} />
+            </div>
+
+            {currentQuestion && (
+              <QuestionDisplay
+                question={currentQuestion}
+                onNext={nextQuestion}
+                onSkip={skipQuestion}
+              />
+            )}
+
+            <div className="text-center">
+              <button
+                onClick={() => {
+                  setIsTraining(false);
+                  setCurrentQuestion(null);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                End Training
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

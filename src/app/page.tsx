@@ -258,13 +258,13 @@ export default function Home() {
     questions.length > 0 ? (questionIndex / questions.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 flex flex-col">
-      <div className="max-w-4xl mx-auto flex-grow">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 dark:from-gray-800 dark:via-gray-900 dark:to-black p-4 flex flex-col font-sans">
+      <div className="max-w-5xl w-full mx-auto flex-grow">
+        <header className="text-center my-8">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-2">
             Sword Driller
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-indigo-200 dark:text-gray-300 text-lg">
             Bible Drill Training Application
           </p>
           {!isSupported && (
@@ -311,13 +311,13 @@ export default function Home() {
               <Timer timeLeft={timeLeft} totalTime={config.timer} />
 
               {/* Status indicator */}
-              <div className="text-center">
+              <div className="text-center h-10">
                 {!isSearchPhase ? (
-                  <p className="text-lg font-medium text-blue-600 dark:text-blue-400">
-                    {isSpeaking ? "🔊 Listen..." : "⏳ Preparing..."}
+                  <p className="text-xl font-bold text-indigo-200">
+                    {isSpeaking ? "🔊 Listen..." : "⏳ Get Ready..."}
                   </p>
                 ) : (
-                  <p className="text-lg font-medium text-green-600 dark:text-green-400">
+                  <p className="text-2xl font-bold text-yellow-300 animate-pulse">
                     🔍 Search!
                   </p>
                 )}

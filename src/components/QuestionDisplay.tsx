@@ -42,10 +42,10 @@ export function QuestionDisplay({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center max-w-2xl mx-auto">
-      <div className="mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 text-center max-w-3xl mx-auto w-full">
+      <div className="mb-6">
         <span
-          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getQuestionTypeColor(
+          className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold ${getQuestionTypeColor(
             question.type
           )}`}
         >
@@ -53,34 +53,34 @@ export function QuestionDisplay({
         </span>
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+      <div className="mb-8 min-h-[120px] flex items-center justify-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">
           {question.text}
         </h2>
 
         {question.reference && (
-          <p className="text-lg text-gray-600 dark:text-gray-300 italic">
+          <p className="text-xl text-gray-500 dark:text-gray-400 italic mt-2">
             "{question.reference}"
           </p>
         )}
       </div>
 
-      <div className="flex gap-4 justify-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
           onClick={onNext}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-6 px-6 rounded-lg text-2xl transition-transform transform hover:scale-105 shadow-lg"
         >
           Found It!
         </button>
         <button
           onClick={onSkip}
-          className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          className="bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-6 rounded-lg text-2xl transition-transform transform hover:scale-105 shadow-lg"
         >
           Skip
         </button>
       </div>
 
-      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 text-sm text-gray-500 dark:text-gray-400">
         {question.type === "books" && "Find and open this book in your Bible"}
         {question.type === "passages" &&
           "Find and open this passage in your Bible"}

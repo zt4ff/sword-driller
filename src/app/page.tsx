@@ -220,9 +220,13 @@ export default function Home() {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
+            clearInterval(interval); // Stop the timer
             playBell();
-            nextQuestion();
-            return config.timer;
+            // Delay to allow the bell sound to play before moving on
+            setTimeout(() => {
+              nextQuestion();
+            }, 200); // 200ms delay
+            return 0; // Show 0 on the timer while waiting
           }
           return prev - 1;
         });

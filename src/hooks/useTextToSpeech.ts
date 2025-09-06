@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 
-interface TTSOptions {
+export interface TTSOptions {
   rate?: number;
   pitch?: number;
   volume?: number;
   voice?: SpeechSynthesisVoice | null;
+  onEnd?: () => void;
 }
 
 export function useTextToSpeech() {
@@ -33,6 +34,7 @@ export function useTextToSpeech() {
     (text: string, options: TTSOptions = {}) => {
       if (!isSupported) {
         console.warn("Speech synthesis not supported");
+        options.onEnd?.(); // Call onEnd even if not supported to not break the chain
         return;
       }
 
@@ -59,8 +61,14 @@ export function useTextToSpeech() {
       }
 
       utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        options.onEnd?.();
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        options.onEnd?.(); // Also call onEnd on error
+      };
 
       utteranceRef.current = utterance;
       speechSynthesis.speak(utterance);

@@ -60,37 +60,30 @@ export default function Home() {
         return;
       }
 
-      setIsSearchPhase(false); // Stop timer during speech sequence
+      setIsSearchPhase(false); // Ensure timer is stopped during speech sequence
 
-      // Step 1: Say "Draw up your sword"
-      speak("Draw up your sword", {
-        rate: config.speakingRate,
-        pitch: 1,
-        volume: 0.8,
-      });
+      const speakSearch = () => {
+        speak("Search", {
+          rate: config.speakingRate,
+          onEnd: () => {
+            // Start the search phase (timer) after "Search" is said
+            setIsSearchPhase(true);
+          },
+        });
+      };
 
-      // Step 2: Wait 3 seconds, then call out the question
-      setTimeout(() => {
+      const speakQuestionText = () => {
         speak(question.text, {
           rate: config.speakingRate,
-          pitch: 1,
-          volume: 0.8,
+          onEnd: speakSearch,
         });
+      };
 
-        // Step 3: Wait another moment, then say "Search" and start timer
-        setTimeout(() => {
-          speak("Search", {
-            rate: config.speakingRate,
-            pitch: 1,
-            volume: 0.8,
-          });
-
-          // Start the search phase (timer) after "Search" is said
-          setTimeout(() => {
-            setIsSearchPhase(true);
-          }, 1000); // Small delay to ensure "Search" is spoken
-        }, 2000); // 2 seconds after question is spoken
-      }, 3000); // 3 seconds after "Draw up your sword"
+      // Start the sequence
+      speak("Draw up your sword", {
+        rate: config.speakingRate,
+        onEnd: speakQuestionText,
+      });
     },
     [speak, isSupported, config.autoSpeak, config.speakingRate]
   );
@@ -155,13 +148,6 @@ export default function Home() {
     setIsSearchPhase(false);
     setTrainingStartTime(new Date());
     setScore(0);
-
-    // Start the speech sequence for the first question
-    setTimeout(() => {
-      if (newQuestions[0]) {
-        speakQuestionSequence(newQuestions[0]);
-      }
-    }, 1000);
   };
 
   const nextQuestion = useCallback(() => {
@@ -173,10 +159,7 @@ export default function Home() {
       setIsSearchPhase(false); // Reset search phase
       setScore((prev) => prev + 1);
 
-      // Start speech sequence for next question
-      setTimeout(() => {
-        speakQuestionSequence(questions[nextIndex]);
-      }, 500);
+      // The speech sequence is now handled by the useEffect hook below
     } else {
       // Training complete
       stop(); // Stop any ongoing speech
@@ -186,6 +169,7 @@ export default function Home() {
 
       // Announce completion
       if (config.autoSpeak) {
+        // Use a small delay to ensure state updates are processed
         setTimeout(() => {
           speak("Training session completed! Well done!", {
             rate: config.speakingRate,
@@ -197,11 +181,10 @@ export default function Home() {
     questionIndex,
     questions,
     config.timer,
-    speakQuestionSequence,
     stop,
-    speak,
     config.autoSpeak,
     config.speakingRate,
+    speak,
   ]);
 
   const skipQuestion = () => {
@@ -215,6 +198,17 @@ export default function Home() {
       speakQuestionSequence(currentQuestion);
     }
   };
+
+  // Effect to trigger speech when the question changes
+  useEffect(() => {
+    if (isTraining && currentQuestion) {
+      // A small delay can help ensure the UI is updated before speech starts
+      const timerId = setTimeout(() => {
+        speakQuestionSequence(currentQuestion);
+      }, 100);
+      return () => clearTimeout(timerId);
+    }
+  }, [currentQuestion, isTraining]); // Dependency on currentQuestion
 
   // Modified useEffect to only run timer during search phase
   useEffect(() => {

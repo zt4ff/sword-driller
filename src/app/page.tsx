@@ -343,7 +343,7 @@ export default function Home() {
             <div className="text-center">
               <button
                 onClick={() => {
-                  stop(); // Stop any ongoing speech
+                  stop();
                   setIsTraining(false);
                   setCurrentQuestion(null);
                   setIsSearchPhase(false);
@@ -363,7 +363,7 @@ export default function Home() {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Powered by{" "}
             <span className="font-medium text-gray-700 dark:text-gray-300">
-              First Baptist Church Alapere Media Team
+              First Baptist Church Alapere Media Team. 2025
             </span>
           </p>
         </div>

@@ -31,7 +31,7 @@ interface Question {
 
 export default function Home() {
   const [config, setConfig] = useState<Config>({
-    timer: 10,
+    timer: 4,
     sections: [
       { type: "books", count: 5 },
       { type: "passages", count: 5 },
@@ -52,7 +52,7 @@ export default function Home() {
   const [isSearchPhase, setIsSearchPhase] = useState(false); // New state to track if timer should run
 
   const { speak, stop, isSpeaking, isSupported } = useTextToSpeech();
-  const playBell = useSound("/bell.mp3");
+  const { play: playBell, unlockAudio } = useSound("/bell.mp3");
 
   const speakQuestionSequence = useCallback(
     (question: Question) => {
@@ -141,6 +141,9 @@ export default function Home() {
   }, [config]);
 
   const startTraining = () => {
+    // Unlock the audio context on the first user interaction
+    unlockAudio();
+
     const newQuestions = generateQuestions();
     setQuestions(newQuestions);
     setQuestionIndex(0);
@@ -212,7 +215,6 @@ export default function Home() {
     }
   }, [currentQuestion, isTraining]); // Dependency on currentQuestion
 
-  // Modified useEffect to only run timer during search phase
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -220,12 +222,13 @@ export default function Home() {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            clearInterval(interval); // Stop the timer
-            playBell();
-            // Delay to allow the bell sound to play before moving on
-            setTimeout(() => {
+            clearInterval(interval); // Stop the timer immediately
+
+            // Play the bell and wait for it to finish before moving on
+            playBell().then(() => {
               nextQuestion();
-            }, 200); // 200ms delay
+            });
+
             return 0; // Show 0 on the timer while waiting
           }
           return prev - 1;

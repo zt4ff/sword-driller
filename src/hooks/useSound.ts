@@ -1,22 +1,55 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+
+// A global flag to see if the audio context is unlocked.
+let isAudioUnlocked = false;
+
+// A silent one-pixel mp3 file encoded in base64.
+const silentSound =
+  "data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAAgAAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
 
 export const useSound = (src: string) => {
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Create the Audio object once.
   useEffect(() => {
-    // We only want to create the Audio object on the client side.
     if (typeof window !== "undefined") {
-      const audioInstance = new Audio(src);
-      setAudio(audioInstance);
+      audioRef.current = new Audio(src);
     }
   }, [src]);
 
-  const play = useCallback(() => {
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch((e) => console.error("Error playing sound:", e));
-    }
-  }, [audio]);
+  // This function should be called on the first user interaction (e.g., a button click).
+  const unlockAudio = useCallback(() => {
+    if (isAudioUnlocked || typeof window === "undefined") return;
 
-  return play;
+    const audio = new Audio(silentSound);
+    audio
+      .play()
+      .then(() => {
+        isAudioUnlocked = true;
+        console.log("Audio context unlocked.");
+      })
+      .catch((e) => console.error("Could not unlock audio:", e));
+  }, []);
+
+  const play = useCallback(async (): Promise<void> => {
+    if (!isAudioUnlocked) {
+      console.warn(
+        "Audio not unlocked. Call unlockAudio() on a user interaction."
+      );
+      unlockAudio();
+    }
+
+    const audio = audioRef.current;
+    if (audio) {
+      return new Promise((resolve, reject) => {
+        audio.onended = () => resolve();
+        audio.onerror = (e) => reject(e);
+        audio.currentTime = 0;
+        audio.play().catch((e) => reject(e));
+      });
+    }
+    return Promise.resolve();
+  }, [unlockAudio]);
+
+  return { play, unlockAudio };
 };

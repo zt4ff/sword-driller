@@ -8,6 +8,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { TTSControls } from "@/components/TTSControls";
 import { bibleBooks, biblePassages, fatherhoodQuotes } from "@/data/bibleData";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
+import { useSound } from "@/hooks/useSound";
 
 type SectionType = "books" | "passages" | "fatherhood";
 
@@ -51,6 +52,7 @@ export default function Home() {
   const [isSearchPhase, setIsSearchPhase] = useState(false); // New state to track if timer should run
 
   const { speak, stop, isSpeaking, isSupported } = useTextToSpeech();
+  const playBell = useSound("/bell.mp3");
 
   const speakQuestionSequence = useCallback(
     (question: Question) => {
@@ -218,7 +220,7 @@ export default function Home() {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
-            // Time's up, move to next question
+            playBell();
             nextQuestion();
             return config.timer;
           }
@@ -228,7 +230,14 @@ export default function Home() {
     }
 
     return () => clearInterval(interval);
-  }, [isTraining, isSearchPhase, timeLeft, config.timer, nextQuestion]);
+  }, [
+    isTraining,
+    isSearchPhase,
+    timeLeft,
+    config.timer,
+    nextQuestion,
+    playBell,
+  ]);
 
   // Check if training time limit reached
   useEffect(() => {

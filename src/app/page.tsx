@@ -6,7 +6,7 @@ import { ConfigPanel } from "@/components/ConfigPanel";
 import { QuestionDisplay } from "@/components/QuestionDisplay";
 import { ProgressBar } from "@/components/ProgressBar";
 import { TTSControls } from "@/components/TTSControls";
-import { bibleBooks, biblePassages, fatherhoodQuotes } from "@/data/bibleData";
+import { bibleBooks, biblePassages, fatherhoodQuotes } from "@/data";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { useSound } from "@/hooks/useSound";
 

@@ -268,13 +268,13 @@ export default function Home() {
     questions.length > 0 ? (questionIndex / questions.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 dark:from-gray-800 dark:via-gray-900 dark:to-black p-4 flex flex-col font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 dark:from-gray-800 dark:via-gray-900 dark:to-black p-4 sm:p-6 flex flex-col font-sans">
       <div className="max-w-5xl w-full mx-auto flex-grow">
-        <header className="text-center my-8">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-2">
+        <header className="text-center my-6 sm:my-8">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-2">
             Sword Driller
           </h1>
-          <p className="text-indigo-200 dark:text-gray-300 text-lg">
+          <p className="text-base sm:text-lg text-indigo-200 dark:text-gray-300">
             Bible Drill Training Application
           </p>
           {!isSupported && (
@@ -287,10 +287,10 @@ export default function Home() {
         </header>
 
         {!isTraining ? (
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
             <ConfigPanel config={config} onConfigChange={setConfig} />
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
                 Ready to Start?
               </h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
@@ -300,7 +300,7 @@ export default function Home() {
               </p>
               <button
                 onClick={startTraining}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-lg"
               >
                 Start Training
               </button>
@@ -314,7 +314,7 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <ProgressBar current={questionIndex + 1} total={questions.length} />
 
             <div className="flex flex-col items-center gap-4">

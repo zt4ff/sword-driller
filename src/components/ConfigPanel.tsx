@@ -66,7 +66,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">
+      <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-gray-800 dark:text-white">
         Training Configuration
       </h2>
 
@@ -112,7 +112,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
 
       {/* Text-to-Speech Settings */}
       <div className="mb-6 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
+        <h3 className="text-base sm:text-lg font-medium text-gray-800 dark:text-white mb-4">
           Text-to-Speech
         </h3>
 
@@ -155,7 +155,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
 
       {/* Sections */}
       <div>
-        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
+        <h3 className="text-base sm:text-lg font-medium text-gray-800 dark:text-white mb-4">
           Question Sections
         </h3>
 
@@ -166,7 +166,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
           return (
             <div
               key={type}
-              className="mb-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg"
+              className="mb-3 p-3 sm:p-4 border border-gray-200 dark:border-gray-600 rounded-lg"
             >
               <div className="flex items-center justify-between mb-2">
                 <label className="flex items-center">

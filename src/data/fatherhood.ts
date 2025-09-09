@@ -1,21 +1,21 @@
 export const fatherhoodQuotes = [
   {
     quote:
-      "When Israel was a child, I loved him, and out of Egypt I called my son.",
+      "“When Israel was a child, I loved him, and out of Egypt I called my son.”",
     reference: "Hosea 11:1",
   },
   {
     quote:
-      "As a father has compassion on his children, so the Lord has compassion on those who fear him.",
-    reference: "Psalms 103:13",
+      "As a father has compassion on his children, so the Lord has compassion on those who fear him;",
+    reference: "Psalm 103:13",
   },
   {
     quote:
-      "See what great love the Father has lavished on us, that we should be called children of God!",
+      "See what great love the Father has lavished on us, that we should be called children of God! And that is what we are!",
     reference: "1 John 3:1",
   },
   {
-    quote: "Your Father knows what you need before you ask him.",
+    quote: "for your Father knows what you need before you ask him.",
     reference: "Matthew 6:8",
   },
   {
@@ -30,12 +30,12 @@ export const fatherhoodQuotes = [
   },
   {
     quote:
-      "The Spirit you received does not make you slaves, so that you live in fear again; rather, the Spirit you received brought about your adoption to sonship.",
+      "The Spirit you received does not make you slaves, so that you live in fear again; rather, the Spirit you received brought about your adoption to sonship. And by him we cry, “Abba, Father.”",
     reference: "Romans 8:15",
   },
   {
     quote:
-      "Yet to all who did receive him, to those who believed in his name, he gave the right to become children of God.",
+      "Yet to all who did receive him, to those who believed in his name, he gave the right to become children of God—",
     reference: "John 1:12",
   },
 ];
